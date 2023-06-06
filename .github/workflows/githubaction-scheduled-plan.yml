@@ -6,6 +6,9 @@ on:
     - cron: "0 5 * * *"
   workflow_call:
     inputs:
+      region:
+        required: true
+        type: string
       roleArn:
         required: true
         type: string
@@ -34,7 +37,7 @@ jobs:
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
-        aws-region: eu-central-1
+        aws-region: ${{ inputs.region }}
         role-to-assume: ${{ inputs.roleArn }}
     # Get the github token with access to the relevant repositories from the app
     - name: Generate token
