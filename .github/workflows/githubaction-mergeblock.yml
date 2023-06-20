@@ -1,0 +1,22 @@
+name: 'BlockMerge'
+
+on:
+  pull_request:
+  workflow_call:
+
+jobs:
+  terraform:
+    name: 'Block Merge'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    environment:
+      name: production
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - name: Block Merge
+      run: exit 1
