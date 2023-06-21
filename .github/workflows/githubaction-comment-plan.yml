@@ -1,4 +1,4 @@
-name: 'TerraformPlanWorkflow'
+name: 'TerraformPlan'
 
 on:
   issue_comment:
