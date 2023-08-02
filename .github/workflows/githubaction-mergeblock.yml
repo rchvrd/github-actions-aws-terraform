@@ -19,4 +19,6 @@ jobs:
         shell: bash
     steps:
     - name: Block Merge
-      run: exit 1
+      run: |
+        echo "Merge is still blocked, please review the PR comments. Some issue in plan or apply must have occurred and needs to be fixed first."
+        exit 1
