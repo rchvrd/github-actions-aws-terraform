@@ -8,6 +8,9 @@ on:
       region:
         required: true
         type: string
+      terraform_version:
+        required: true
+        type: string
       roleArn:
         required: true
         type: string
@@ -26,13 +29,7 @@ on:
       github_event_repository_url:
         required: true
         type: string
-    secrets:
-      app_id:
-        required: true
-      private_key:
-        required: true
-      git_token:
-        required: true
+
 
 jobs:
   terraform:
@@ -61,8 +58,8 @@ jobs:
       id: generate-token
       uses: tibdex/github-app-token@v1
       with:
-        app_id: ${{ secrets.app_id }}
-        private_key: ${{ secrets.private_key }}
+        app_id: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+        private_key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
 
     # Configure github access
     - uses: de-vri-es/setup-git-credentials@v2
@@ -79,7 +76,7 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
       with:
-        terraform_version: 1.5.4
+        terraform_version: ${{ inputs.terraform_version }}
 
     # Initialize Terraform
     - name: Terraform Init
@@ -100,7 +97,6 @@ jobs:
       continue-on-error: true
       run: |
         terraform apply -input=false -no-color tfplan
-
     # Upload the plan to S3
     - name: Upload Plan to S3
       run: |
