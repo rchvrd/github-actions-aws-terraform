@@ -109,7 +109,7 @@ jobs:
       env:
         URL: ${{ inputs.github_event_issue_comments_url }}
         LABEL: ${{ inputs.github_event_issue_url }}
-        GITHUB_TOKEN: ${{ secrets.git_token }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         (printf "Mode1 Apply\n\n\`\`\`" && echo -n '${{ steps.apply.outputs.stdout }}' && printf "\`\`\`\n\n") > comment.txt
         jq -R -s '.' < comment.txt > comment2.txt
@@ -119,13 +119,13 @@ jobs:
           -X POST \
           $URL \
           -H "Content-Type: application/json" \
-          -H "Authorization: token ${{ secrets.git_token }}" \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d @comment3.txt
         curl \
           -X POST \
           $LABEL/labels \
           -H "Content-Type: application/json" \
-          -H "Authorization: token ${{ secrets.git_token }}" \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d '["applied"]'
 
     # If the apply was successful, merge the branch into the main
@@ -133,13 +133,13 @@ jobs:
       if: steps.apply.outcome == 'success'
       env:
         URL: ${{ inputs.github_event_repository_url }}/pulls/${{ inputs.github_event_number }}/merge
-        GITHUB_TOKEN: ${{ secrets.git_token }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         curl \
         -X PUT \
         $URL \
         -H "Content-Type: application/json" \
-        -H "Authorization: token ${{ secrets.git_token }}" \
+        -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
         -d '{"commit_title":"terraform update applied"}'
 
     # remove the organization plan from S3 whether successful or not
@@ -152,7 +152,7 @@ jobs:
       if: steps.apply.outcome == 'failure'
       env:
         URL: ${{ inputs.github_event_issue_comments_url }}
-        GITHUB_TOKEN: ${{ secrets.git_token }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         (printf "Apply failed for Mode1:\n\nMode1\n\n\`\`\`" && echo -n '${{ steps.apply.outputs.stderr }}' && printf "\`\`\`\n\n") > comment.txt
         jq -R -s '.' < comment.txt > comment2.txt
@@ -162,5 +162,5 @@ jobs:
           -X POST \
           $URL \
           -H "Content-Type: application/json" \
-          -H "Authorization: token ${{ secrets.git_token }}" \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d @comment3.txt
