@@ -18,9 +18,6 @@ on:
       s3bucketName:
         required: true
         type: string
-      github_event_number:
-        required: true
-        type: string
       github_event_issue_url:
         required: true
         type: string
