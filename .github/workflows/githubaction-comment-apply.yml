@@ -18,6 +18,9 @@ on:
       s3bucketName:
         required: true
         type: string
+      github_event_number:
+        required: true
+        type: string
       github_event_issue_url:
         required: true
         type: string
@@ -46,8 +49,6 @@ jobs:
         shell: bash
 
     steps:
-    - name: Get PR number
-      run: echo ${{ github.event.pull_request.number }}
     # Assume the role in AWS to roll out the changes
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
@@ -73,7 +74,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
       with:
-        ref: refs/pull/${{ github.event.pull_request.number }}/merge
+        ref: refs/pull/${{ inputs.github_event_number }}/merge
     - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
       shell: bash
 
@@ -117,7 +118,7 @@ jobs:
     - name: Download Plan from S3
       run: |
         cd ${{ inputs.stack }}
-        aws s3 cp s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ github.event.pull_request.number }}/tfplan ./tfplan
+        aws s3 cp s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/tfplan ./tfplan
 
     # Build or change infrastructure according to Terraform configuration files
     - name: Terraform Apply
@@ -130,7 +131,7 @@ jobs:
     - name: Upload Plan to S3
       run: |
         cd ${{ inputs.stack }}
-        aws s3 cp ./tfplan s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ github.event.pull_request.number }}/
+        aws s3 cp ./tfplan s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/
 
     # CONCLUDE
     # If the apply was successful, post a comment with the applied output
@@ -163,7 +164,7 @@ jobs:
     - name: Merge into main
       if: steps.apply.outcome == 'success'
       env:
-        URL: ${{ inputs.github_event_repository_url }}/pulls/${{ github.event.pull_request.number }}/merge
+        URL: ${{ inputs.github_event_repository_url }}/pulls/${{ inputs.github_event_number }}/merge
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cd ${{ inputs.stack }}
@@ -178,7 +179,7 @@ jobs:
     - name: Delete Plan from S3
       run: |
         cd ${{ inputs.stack }}
-        aws s3 rm --recursive s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ github.event.pull_request.number }}
+        aws s3 rm --recursive s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}
 
     # If the apply failed, post the errors
     - name: Post Organization Apply Failure

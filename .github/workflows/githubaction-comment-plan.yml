@@ -18,6 +18,9 @@ on:
       s3bucketName:
         required: true
         type: string
+      github_event_number:
+        required: true
+        type: string
       github_event_issue_url:
         required: true
         type: string
@@ -43,7 +46,7 @@ jobs:
 
     steps:
     - name: Get PR number
-      run: echo ${{ github.event.pull_request.number }}
+      run: echo ${{ inputs.github_event_number }}
     # Assume the role in AWS to roll out the changes
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
@@ -69,7 +72,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
       with:
-        ref: refs/pull/${{ github.event.pull_request.number }}/merge
+        ref: refs/pull/${{ inputs.github_event_number }}/merge
     - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
       shell: bash
 
@@ -135,7 +138,7 @@ jobs:
     - name: Upload ${{ inputs.stack }} Plan to S3
       run: |
         cd ${{ inputs.stack }}
-        aws s3 cp ./tfplan s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ github.event.pull_request.number }}/
+        aws s3 cp ./tfplan s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/
 
     # CONCLUDE
     # Post a comment with the plan outputs and add the 'planned' label
