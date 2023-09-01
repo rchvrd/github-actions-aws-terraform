@@ -11,6 +11,7 @@ on:
       terraform_version:
         required: true
         type: string
+        default: latest
       roleArn:
         required: true
         type: string
@@ -29,6 +30,10 @@ on:
       github_event_repository_url:
         required: true
         type: string
+      stack:
+        required: true
+        type: string
+        default: "."
 
 
 jobs:
@@ -82,49 +87,52 @@ jobs:
 
     # Initialize Terraform
     - name: Terraform Init
-      run: terraform init -upgrade
+      run: |
+        cd ${{ inputs.stack }}
+        terraform init -upgrade
 
     # Terraform Validation Steps
-    - name: terraform validate
+    - name: terraform validate ${{ inputs.stack }}
       uses: dflook/terraform-validate@v1-ghcr
+      with:
+        path: ${{ inputs.stack }}
       env:
+        TERRAFORM_HTTP_CREDENTIALS: |
+          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-        # GITHUB_APP_INSTALLATION_ID: ${{ secrets.TFAPP_INSTID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-    - name: Check for drift
-      uses: dflook/terraform-check@v1-ghcr
-      env:
-        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-        # GITHUB_APP_INSTALLATION_ID: ${{ secrets.TFAPP_INSTID }}
-        GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-    - name: terraform fmt
+    - name: terraform fmt ${{ inputs.stack }}
       uses: dflook/terraform-fmt@v1-ghcr
+      with:
+        path: ${{ inputs.stack }}
       env:
+        TERRAFORM_HTTP_CREDENTIALS: |
+          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-        # GITHUB_APP_INSTALLATION_ID: ${{ secrets.TFAPP_INSTID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
 
     # Download the plan from S3
     - name: Download Plan from S3
       run: |
-        aws s3 cp s3://${{ inputs.s3bucketName }}/plans/tfplan ./tfplan
+        cd ${{ inputs.stack }}
+        aws s3 cp s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/tfplan ./tfplan
 
     # Build or change infrastructure according to Terraform configuration files
     - name: Terraform Apply
       id: apply
       continue-on-error: true
       run: |
+        cd ${{ inputs.stack }}
         terraform apply -input=false -no-color tfplan
     # Upload the plan to S3
     - name: Upload Plan to S3
       run: |
-        aws s3 cp ./tfplan s3://${{ inputs.s3bucketName }}/plans/
+        cd ${{ inputs.stack }}
+        aws s3 cp ./tfplan s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/
 
     # CONCLUDE
     # If the apply was successful, post a comment with the applied output
@@ -135,6 +143,7 @@ jobs:
         LABEL: ${{ inputs.github_event_issue_url }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        cd ${{ inputs.stack }}
         (printf "Mode1 Apply\n\n\`\`\`" && echo -n '${{ steps.apply.outputs.stdout }}' && printf "\`\`\`\n\n") > comment.txt
         jq -R -s '.' < comment.txt > comment2.txt
         truncate -s -1 comment2.txt
@@ -159,6 +168,7 @@ jobs:
         URL: ${{ inputs.github_event_repository_url }}/pulls/${{ inputs.github_event_number }}/merge
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        cd ${{ inputs.stack }}
         curl \
         -X PUT \
         $URL \
@@ -169,7 +179,8 @@ jobs:
     # remove the organization plan from S3 whether successful or not
     - name: Delete Plan from S3
       run: |
-        aws s3 rm s3://${{ inputs.s3bucketName }}/plans/tfplan
+        cd ${{ inputs.stack }}
+        aws s3 rm --recursive s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}
 
     # If the apply failed, post the errors
     - name: Post Organization Apply Failure
@@ -178,6 +189,7 @@ jobs:
         URL: ${{ inputs.github_event_issue_comments_url }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        cd ${{ inputs.stack }}
         (printf "Apply failed for Mode1:\n\nMode1\n\n\`\`\`" && echo -n '${{ steps.apply.outputs.stderr }}' && printf "\`\`\`\n\n") > comment.txt
         jq -R -s '.' < comment.txt > comment2.txt
         truncate -s -1 comment2.txt

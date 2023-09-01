@@ -31,6 +31,7 @@ on:
       terraform_version:
         required: true
         type: string
+        default: latest
 
 jobs:
   terraform:

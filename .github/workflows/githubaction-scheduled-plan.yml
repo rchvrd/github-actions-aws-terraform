@@ -13,6 +13,11 @@ on:
       terraform_version:
         required: true
         type: string
+        default: latest
+      stack:
+        required: true
+        type: string
+        default: "."
 
 jobs:
   terraform:
@@ -54,12 +59,48 @@ jobs:
         terraform_version: ${{ inputs.terraform_version }}
     # Initialize Terraform
     - name: Terraform Init
-      run: terraform init -upgrade
+      run: |
+        cd ${{ inputs.stack }}
+        terraform init -upgrade
+    - name: terraform validate ${{ inputs.stack }}
+      uses: dflook/terraform-validate@v1-ghcr
+      with:
+        path: ${{ inputs.stack }}
+      env:
+        TERRAFORM_HTTP_CREDENTIALS: |
+          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
+        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+        GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+    - name: terraform fmt ${{ inputs.stack }}
+      uses: dflook/terraform-fmt@v1-ghcr
+      with:
+        path: ${{ inputs.stack }}
+      env:
+        TERRAFORM_HTTP_CREDENTIALS: |
+          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
+        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+        GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+    - name: Check for drift ${{ inputs.stack }}
+      uses: dflook/terraform-check@v1-ghcr
+      with:
+        path: ${{ inputs.stack }}
+      env:
+        TERRAFORM_HTTP_CREDENTIALS: |
+          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
+        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+        GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
     # Generate plan
     - name: Terraform Plan Landingzone
       id: tfplan
       continue-on-error: true
       run: |
+        cd ${{ inputs.stack }}
         # Bash script to build terraform plan command dynamically
         COMMAND="terraform plan -input=false -no-color -out=tfplanlz --detailed-exitcode"
         SECRETS_JSON='${{ toJson(secrets) }}'

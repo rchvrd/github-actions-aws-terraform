@@ -11,6 +11,7 @@ on:
       terraform_version:
         required: true
         type: string
+        default: latest
       roleArn:
         required: true
         type: string
@@ -96,21 +97,7 @@ jobs:
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-        # GITHUB_APP_INSTALLATION_ID: ${{ secrets.TFAPP_INSTID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-    # TODO: This doesn't make sense here, it should be run in a cron
-    # - name: Check for drift ${{ inputs.stack }}
-    #   uses: dflook/terraform-check@v1-ghcr
-    #   with:
-    #     path: ${{ inputs.stack }}
-    #   env:
-    #     TERRAFORM_HTTP_CREDENTIALS: |
-    #       github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
-    #     GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-    #     TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-    #     GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-    #     # GITHUB_APP_INSTALLATION_ID: ${{ secrets.TFAPP_INSTID }}
-    #     GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
     - name: terraform fmt ${{ inputs.stack }}
       uses: dflook/terraform-fmt@v1-ghcr
       with:
@@ -121,7 +108,6 @@ jobs:
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-        # GITHUB_APP_INSTALLATION_ID: ${{ secrets.TFAPP_INSTID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
 
     # Generate terraform plan
@@ -150,7 +136,7 @@ jobs:
     - name: Upload ${{ inputs.stack }} Plan to S3
       run: |
         cd ${{ inputs.stack }}
-        aws s3 cp ./tfplan s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/
+        aws s3 cp ./tfplan s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/
 
     # CONCLUDE
     # Post a comment with the plan outputs and add the 'planned' label
