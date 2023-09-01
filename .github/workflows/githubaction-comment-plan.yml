@@ -77,29 +77,40 @@ jobs:
         terraform_version: ${{ inputs.terraform_version }}
 
     # Initialize Terraform
-    - name: Terraform Init
-      run: terraform init -upgrade
+    - name: Terraform Init ${{ inputs.stack }}
+      run: |
+        cr ${{ inputs.stack }}
+        terraform init -upgrade
 
     # Terraform Validation Steps
-    - name: terraform validate
+    - name: terraform validate ${{ inputs.stack }}
       uses: dflook/terraform-validate@v1-ghcr
+      with:
+        label: ${{ inputs.stack }}
+        path: ${{ inputs.stack }}
       env:
+        TERRAFORM_HTTP_CREDENTIALS: |
+          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         # GITHUB_APP_INSTALLATION_ID: ${{ secrets.TFAPP_INSTID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-    - name: Check for drift
+    - name: Check for drift ${{ inputs.stack }}
       uses: dflook/terraform-check@v1-ghcr
       env:
+        TERRAFORM_HTTP_CREDENTIALS: |
+          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         # GITHUB_APP_INSTALLATION_ID: ${{ secrets.TFAPP_INSTID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-    - name: terraform fmt
+    - name: terraform fmt ${{ inputs.stack }}
       uses: dflook/terraform-fmt@v1-ghcr
       env:
+        TERRAFORM_HTTP_CREDENTIALS: |
+          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
@@ -107,10 +118,11 @@ jobs:
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
 
     # Generate terraform plan
-    - name: Terraform Plan
+    - name: Terraform Plan ${{ inputs.stack }}
       id: tfplan
       continue-on-error: true
       run: |
+        cd ${{ inputs.stack }}
         # Bash script to build terraform plan command dynamically
         COMMAND="terraform plan -input=false -no-color -out=tfplan"
         SECRETS_JSON='${{ toJson(secrets) }}'
@@ -128,9 +140,10 @@ jobs:
         eval $COMMAND && terraform show -no-color tfplan | sed 's/\x27/ /g' | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt
 
     # Upload the plan to S3
-    - name: Upload Plan to S3
+    - name: Upload ${{ inputs.stack }} Plan to S3
       run: |
-        aws s3 cp ./tfplan s3://${{ inputs.s3bucketName }}/plans/
+        cd ${{ inputs.stack }}
+        aws s3 cp ./tfplan s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/
 
     # CONCLUDE
     # Post a comment with the plan outputs and add the 'planned' label
@@ -140,6 +153,7 @@ jobs:
         LABEL: ${{ inputs.github_event_issue_url }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        cd ${{ inputs.stack }}
         (printf "Mode1 Plan\n\n\`\`\`diff" && sed '/^::/d' plan.txt) > comment.txt
         jq -R -s '.' < comment.txt > comment2.txt
         truncate -s -1 comment2.txt
