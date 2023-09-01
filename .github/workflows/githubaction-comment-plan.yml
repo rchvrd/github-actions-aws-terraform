@@ -26,7 +26,10 @@ on:
       github_event_issue_comments_url:
         required: true
         type: string
-
+      stack:
+        required: true
+        type: string
+        default: "."
 
 jobs:
   terraform:
