@@ -82,9 +82,13 @@ jobs:
     - name: Terraform Init
       run: terraform init -upgrade
 
-    # Checks that all Terraform configuration files adhere to a canonical format
-    - name: Terraform Format LandingZone
-      run: terraform fmt -check
+    # Terraform Validation Steps
+    - name: terraform validate
+      uses: dflook/terraform-validate@v1
+    - name: Check for drift
+      uses: dflook/terraform-check@v1
+    - name: terraform fmt
+      uses: dflook/terraform-fmt@v1
 
     # Download the plan from S3
     - name: Download Plan from S3

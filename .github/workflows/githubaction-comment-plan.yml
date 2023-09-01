@@ -78,9 +78,13 @@ jobs:
     - name: Terraform Init
       run: terraform init -upgrade
 
-    # Check that all Terraform configuration files adhere to a canonical format
-    - name: Terraform Format
-      run: terraform fmt -check -diff -recursive
+    # Terraform Validation Steps
+    - name: terraform validate
+      uses: dflook/terraform-validate@v1
+    - name: Check for drift
+      uses: dflook/terraform-check@v1
+    - name: terraform fmt
+      uses: dflook/terraform-fmt@v1
 
     # Generate terraform plan
     - name: Terraform Plan
