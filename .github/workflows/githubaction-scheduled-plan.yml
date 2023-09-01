@@ -63,7 +63,7 @@ jobs:
         cd ${{ inputs.stack }}
         terraform init -upgrade
     - name: terraform validate ${{ inputs.stack }}
-      uses: dflook/terraform-validate@v1-ghcr
+      uses: dflook/terraform-validate@v1
       with:
         path: ${{ inputs.stack }}
       env:
@@ -85,7 +85,7 @@ jobs:
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
     - name: Check for drift ${{ inputs.stack }}
-      uses: dflook/terraform-check@v1-ghcr
+      uses: dflook/terraform-check@v1
       with:
         path: ${{ inputs.stack }}
       env:
