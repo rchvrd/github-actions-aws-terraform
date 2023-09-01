@@ -89,7 +89,6 @@ jobs:
     - name: terraform validate ${{ inputs.stack }}
       uses: dflook/terraform-validate@v1-ghcr
       with:
-        label: ${{ inputs.stack }}
         path: ${{ inputs.stack }}
       env:
         TERRAFORM_HTTP_CREDENTIALS: |
@@ -101,6 +100,8 @@ jobs:
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
     - name: Check for drift ${{ inputs.stack }}
       uses: dflook/terraform-check@v1-ghcr
+      with:
+        path: ${{ inputs.stack }}
       env:
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
@@ -111,6 +112,8 @@ jobs:
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
     - name: terraform fmt ${{ inputs.stack }}
       uses: dflook/terraform-fmt@v1-ghcr
+      with:
+        path: ${{ inputs.stack }}
       env:
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
