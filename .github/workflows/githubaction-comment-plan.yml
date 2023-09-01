@@ -82,7 +82,7 @@ jobs:
     # Initialize Terraform
     - name: Terraform Init ${{ inputs.stack }}
       run: |
-        cr ${{ inputs.stack }}
+        cd ${{ inputs.stack }}
         terraform init -upgrade
 
     # Terraform Validation Steps
