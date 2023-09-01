@@ -84,7 +84,7 @@ jobs:
 
     # Terraform Validation Steps
     - name: terraform validate
-      uses: dflook/terraform-validate@v1
+      uses: dflook/terraform-validate@v1-ghcr
       env:
         GITHUB_TOKEN: ""
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
@@ -92,7 +92,7 @@ jobs:
         # GITHUB_APP_INSTALLATION_ID: ${{ secrets.TFAPP_INSTID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
     - name: Check for drift
-      uses: dflook/terraform-check@v1
+      uses: dflook/terraform-check@v1-ghcr
       env:
         GITHUB_TOKEN: ""
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
@@ -100,7 +100,7 @@ jobs:
         # GITHUB_APP_INSTALLATION_ID: ${{ secrets.TFAPP_INSTID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
     - name: terraform fmt
-      uses: dflook/terraform-fmt@v1
+      uses: dflook/terraform-fmt@v1-ghcr
       env:
         GITHUB_TOKEN: ""
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
