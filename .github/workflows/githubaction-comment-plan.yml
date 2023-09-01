@@ -148,7 +148,7 @@ jobs:
         # LABEL: ${{ inputs.github_event_issue_url }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        export LABELS=https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}
+        set -x
         cd ${{ inputs.stack }}
         (printf "Mode1 Plan\n\n\`\`\`diff" && sed '/^::/d' plan.txt) > comment.txt
         jq -R -s '.' < comment.txt > comment2.txt
@@ -162,7 +162,7 @@ jobs:
           -d @comment3.txt
         curl \
           -X POST \
-          $LABEL/labels \
+          https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
           -H "Content-Type: application/json" \
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d '["planned"]'
