@@ -21,9 +21,6 @@ on:
       github_event_number:
         required: true
         type: string
-      github_event_issue_url:
-        required: true
-        type: string
       github_event_issue_comments_url:
         required: true
         type: string
@@ -139,7 +136,6 @@ jobs:
       if: steps.apply.outcome == 'success'
       env:
         URL: ${{ inputs.github_event_issue_comments_url }}
-        LABEL: ${{ inputs.github_event_issue_url }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cd ${{ inputs.stack }}
@@ -155,7 +151,7 @@ jobs:
           -d @comment3.txt
         curl \
           -X POST \
-          $LABEL/labels \
+          https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
           -H "Content-Type: application/json" \
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d '["applied"]'

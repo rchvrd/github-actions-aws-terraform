@@ -21,9 +21,6 @@ on:
       github_event_number:
         required: true
         type: string
-      github_event_issue_url:
-        required: true
-        type: string
       github_event_issue_comments_url:
         required: true
         type: string
@@ -145,7 +142,6 @@ jobs:
     - name: Post Plan to GitHub PR
       env:
         COMMENT: ${{ inputs.github_event_issue_comments_url }}
-        # LABEL: ${{ inputs.github_event_issue_url }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         set -x
