@@ -146,7 +146,7 @@ jobs:
       run: |
         set -x
         cd ${{ inputs.stack }}
-        (printf "Mode1 Plan\n\n\`\`\`diff" && sed '/^::/d' plan.txt) > comment.txt
+        (printf "Terraform Plan\n\n\`\`\`diff" && sed '/^::/d' plan.txt) > comment.txt
         jq -R -s '.' < comment.txt > comment2.txt
         truncate -s -1 comment2.txt
         (echo -n '{ "body": ' && cat comment2.txt && echo -n ' }') > comment3.txt

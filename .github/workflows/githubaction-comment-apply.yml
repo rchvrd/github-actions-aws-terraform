@@ -139,7 +139,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cd ${{ inputs.stack }}
-        (printf "Mode1 Apply\n\n\`\`\`" && echo -n '${{ steps.apply.outputs.stdout }}' && printf "\`\`\`\n\n") > comment.txt
+        (printf "Terraform Apply\n\n\`\`\`" && echo -n '${{ steps.apply.outputs.stdout }}' && printf "\`\`\`\n\n") > comment.txt
         jq -R -s '.' < comment.txt > comment2.txt
         truncate -s -1 comment2.txt
         (echo -n '{ "body": ' && cat comment2.txt && echo -n ' }') > comment3.txt
@@ -185,7 +185,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cd ${{ inputs.stack }}
-        (printf "Apply failed for Mode1:\n\nMode1\n\n\`\`\`" && echo -n '${{ steps.apply.outputs.stderr }}' && printf "\`\`\`\n\n") > comment.txt
+        (printf "Apply failed for:\n\n\`\`\`" && echo -n '${{ steps.apply.outputs.stderr }}' && printf "\`\`\`\n\n") > comment.txt
         jq -R -s '.' < comment.txt > comment2.txt
         truncate -s -1 comment2.txt
         (echo -n '{ "body": ' && cat comment2.txt && echo -n ' }') > comment3.txt
