@@ -9,7 +9,7 @@ on:
         required: true
         type: string
       terraform_version:
-        required: true
+        required: false
         type: string
         default: latest
       roleArn:
@@ -28,7 +28,7 @@ on:
         required: true
         type: string
       stack:
-        required: true
+        required: false
         type: string
         default: "."
 

@@ -11,11 +11,11 @@ on:
         required: true
         type: string
       terraform_version:
-        required: true
+        required: false
         type: string
         default: latest
       stack:
-        required: true
+        required: false
         type: string
         default: "."
 
