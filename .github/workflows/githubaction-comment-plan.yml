@@ -32,7 +32,10 @@ jobs:
   terraform:
     name: 'Plan Terraform'
     runs-on: ubuntu-latest
+    outputs:
+      output1: ${{ steps.job.outputs.job_id }}
     permissions:
+      actions: read
       id-token: write
       contents: read
       pull-requests: write
@@ -41,7 +44,15 @@ jobs:
         shell: bash
 
     steps:
-    # Assume the role in AWS to roll out the changes
+    # Expose and capture the job ID of the current job
+    - uses: ReeganExE/github-action-job-id@v1.0
+    - name: Job ID output
+      id: job
+      run: |
+        echo ${GH_JOB_0_ID}
+        echo "job_id=$GH_JOB_0_ID" >> $GITHUB_OUTPUT
+
+    #Assume the role in AWS to roll out the changes
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -132,3 +143,35 @@ jobs:
           -H "Content-Type: application/json" \
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d '["planned"]'
+
+  logging:
+    name: 'Save logs'
+    needs: terraform
+    runs-on: ubuntu-latest
+    if: always() # This job will always run
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    # Assume the role in AWS to upload the logs
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-region: ${{ inputs.region }}
+        role-to-assume: ${{ inputs.roleArn }}
+
+    # Save previous job logs and upload to s3
+    - name: Retrieve log file and upload to s3
+      run: |
+        TIMESTAMP=$(date +'%Y-%m-%d-%H:%M:%S')
+        LOG_FILENAME="TerraformPlan_${{ inputs.github_event_number }}_PR_$TIMESTAMP.txt"
+        # Get log file
+        gh api repos/{owner}/{repo}/actions/jobs/${{ needs.terraform.outputs.output1 }}/logs > $LOG_FILENAME
+        # Upload it to s3
+        aws s3 cp $LOG_FILENAME s3://${{ inputs.s3bucketName }}/logs/
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
