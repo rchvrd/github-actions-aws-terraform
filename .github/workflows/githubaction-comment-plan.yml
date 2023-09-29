@@ -52,7 +52,7 @@ jobs:
         echo ${GH_JOB_0_ID}
         echo "job_id=$GH_JOB_0_ID" >> $GITHUB_OUTPUT
 
-    #Assume the role in AWS to roll out the changes
+    # Assume the role in AWS to roll out the changes
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -172,6 +172,6 @@ jobs:
         # Get log file
         gh api repos/{owner}/{repo}/actions/jobs/${{ needs.terraform.outputs.output1 }}/logs > $LOG_FILENAME
         # Upload it to s3
-        aws s3 cp $LOG_FILENAME s3://${{ inputs.s3bucketName }}/logs/
+        aws s3 cp $LOG_FILENAME s3://${{ inputs.s3bucketName }}/logs/Plan/
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
