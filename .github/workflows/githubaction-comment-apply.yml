@@ -78,7 +78,7 @@ jobs:
 
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: refs/pull/${{ inputs.github_event_number }}/merge
 
@@ -186,7 +186,7 @@ jobs:
       contents: read
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     # Assume the role in AWS to upload the logs
     - name: Configure AWS Credentials

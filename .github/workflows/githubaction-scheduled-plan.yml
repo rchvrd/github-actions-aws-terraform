@@ -60,7 +60,7 @@ jobs:
         credentials: https://oauth:${{ steps.generate-token.outputs.token }}@github.com/
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     # Install the latest version of Terraform CLI
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
@@ -107,7 +107,7 @@ jobs:
       contents: read
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     # Assume the role in AWS to upload the logs
     - name: Configure AWS Credentials
