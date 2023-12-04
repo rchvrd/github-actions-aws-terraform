@@ -84,17 +84,6 @@ jobs:
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-    - name: Check for drift ${{ inputs.stack }}
-      uses: dflook/terraform-check@v1
-      with:
-        path: ${{ inputs.stack }}
-      env:
-        TERRAFORM_HTTP_CREDENTIALS: |
-          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
-        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-        GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
     # Generate plan
     - name: Terraform Plan Landingzone
       id: tfplan
