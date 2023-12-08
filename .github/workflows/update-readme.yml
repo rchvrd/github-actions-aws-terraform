@@ -1,0 +1,39 @@
+name: Update Readme.MD
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+  issue_comment:
+    types:
+      - created
+
+jobs:
+  generate-readme:
+    runs-on: ubuntu-latest
+
+    if: ${{ github.event.issue.pull_request && github.event.comment.body == '/plan' }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Download Terraform Docs
+        run: |
+          wget https://github.com/terraform-docs/terraform-docs/releases/latest/download/terraform-docs-linux-amd64 -O terraform-docs
+          chmod +x terraform-docs
+
+      - name: Generate Readme.MD
+        run: |
+          ./terraform-docs markdown .
+          mv README.md README.generated.md
+
+      - name: Commit and Push Changes
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add .
+          git commit -m "Generate Readme.MD using terraform-docs"
+          git push
