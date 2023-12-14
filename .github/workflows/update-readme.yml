@@ -24,7 +24,7 @@ jobs:
         run: |
           wget https://github.com/terraform-docs/terraform-docs/releases/latest/download/terraform-docs-linux-amd64 -O terraform-docs
           chmod +x terraform-docs
-          
+
       - name: Generate Readme.MD
         run: |
           ./terraform-docs markdown .
