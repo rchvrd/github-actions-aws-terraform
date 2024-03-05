@@ -75,6 +75,15 @@ jobs:
     - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
       shell: bash
 
+    - name: Check if stack has changes
+      id: filter
+      uses: dorny/paths-filter@v2
+      with:
+        # Assuming that `inputs.stack` would be something like 'dev', 'prod', etc.
+        filters: |
+          stack_changes:
+            - '${{ inputs.stack }}/**'
+
     # Install the latest version of Terraform CLI
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
@@ -113,12 +122,14 @@ jobs:
 
     # Download the plan from S3
     - name: Download Plan from S3
+      if: steps.filter.outputs.stack_changes == 'true'
       run: |
         cd ${{ inputs.stack }}
         aws s3 cp s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/tfplan ./tfplan
 
     # Build or change infrastructure according to Terraform configuration files
     - name: Terraform Apply
+      if: steps.filter.outputs.stack_changes == 'true'
       id: apply
       continue-on-error: true
       run: |
