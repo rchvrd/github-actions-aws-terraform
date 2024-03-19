@@ -1,14 +1,7 @@
 name: 'GenerateTerraformDocs'
 
 on:
-  workflow_call:
-    inputs:
-      github_event_number:
-          required: true
-          type: string
-      github_event_issue_comments_url:
-          required: true
-          type: string
+  workflow_call: {}
 
 jobs:
   generatedocs:
