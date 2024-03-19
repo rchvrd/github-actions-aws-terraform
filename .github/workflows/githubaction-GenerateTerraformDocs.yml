@@ -1,7 +1,11 @@
 name: 'GenerateTerraformDocs'
 
 on:
-  workflow_call: {}
+  workflow_call:
+    inputs:
+      TF_CONFIG_DIR:
+        default: '.'
+        type: string
 
 jobs:
   generatedocs:
@@ -47,6 +51,11 @@ jobs:
           working-dir: ./
           output-file: README.md
           output-method: inject
+
+      - name: terraform fmt
+        uses: dflook/terraform-fmt@v1
+        with:
+          path: ${{ inputs.TF_CONFIG_DIR }}
 
       - run: sudo chown -R $(whoami) .git && sudo chmod -R u+rwX .git
 
