@@ -10,10 +10,6 @@ on:
       roleArn:
         required: true
         type: string
-      terraform_version:
-        required: false
-        type: string
-        default: latest
       stack:
         required: false
         type: string
@@ -55,8 +51,6 @@ jobs:
     # Install the latest version of Terraform CLI
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_version: ${{ inputs.terraform_version }}
     # Initialize Terraform
     - name: Terraform Init
       run: |
