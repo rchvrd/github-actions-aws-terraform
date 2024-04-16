@@ -106,4 +106,7 @@ jobs:
     # Check if plan generated differences or failed
     - name: Check TF Plan outcome
       if: steps.tfplan.outputs.exitcode !=0
-      run: exit 1
+      run: |
+      exit 1
+      # Echo the exit code for debugging
+      echo "Exit code: ${{ steps.tfplan.outputs.exitcode }}"
