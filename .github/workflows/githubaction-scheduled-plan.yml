@@ -100,13 +100,12 @@ jobs:
           fi
         done
         # Execute the dynamically generated terraform command
-        eval $COMMAND
-
+        echo "TF_OUTPUT=$(eval $COMMAND)\n" >> $GITHUB_OUTPUT
     # CONCLUDE
     # Check if plan generated differences or failed
     - name: Check TF Plan outcome
-      if: steps.tfplan.outputs.exitcode !=0
+      if: steps.tfplan.outputs.exitcode !=0 
       run: |
-      exit 1
-      # Echo the exit code for debugging
-      echo "Exit code: ${{ steps.tfplan.outputs.exitcode }}"
+        #echo "Output: ${{join(steps.tfplan.outputs.*, '\n')}}"
+        aws sns publish --topic-arn "arn:aws:sns:eu-central-1:879391945288:MW_PatchingNotifications_eu-central-1" --message "${{join(steps.tfplan.outputs.*, '\n')}}"
+        exit 1
