@@ -241,7 +241,11 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cd ${{ inputs.stack }}
-        (printf "Apply failed for ${{ inputs.stack }} environment:\n\n\`\`\`" && echo -n '${{ steps.apply.outputs.stderr }}' && printf "\`\`\`\n\n") > comment.txt
+        (printf "Apply failed for ${{ inputs.stack }} environment:\n\n**Standard Output:**\n\n\`\`\`" && 
+        echo -n '${{ steps.apply.outputs.stdout }}' &&
+        printf "\`\`\`\n\n**Error Output:**\n\n\`\`\`" &&
+        echo -n '${{ steps.apply.outputs.stderr }}' &&
+        printf "\`\`\`\n\n") > comment.txt
         jq -R -s '.' < comment.txt > comment2.txt
         truncate -s -1 comment2.txt
         (echo -n '{ "body": ' && cat comment2.txt && echo -n ' }') > comment3.txt
