@@ -9,68 +9,68 @@ on:
 
 jobs:
   generatedocs:
-    runs-on: ubuntu-latest
+    runs-on: arvato
     if: >
       github.event_name == 'pull_request' ||
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '/update-readme'))
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
-      - name: Extract PR number
-        id: get-pr-number
-        run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "PR_NUMBER=${{ github.event.number }}" >> $GITHUB_ENV
-          elif [[ "${{ github.event_name }}" == "issue_comment" && "${{ github.event.issue.pull_request }}" != null ]]; then
-            PR_URL="${{ github.event.issue.pull_request.url }}"
-            PR_NUMBER=$(basename $PR_URL)
-            echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
-          fi
-        shell: bash
+    - name: Extract PR number
+      id: get-pr-number
+      run: |
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          echo "PR_NUMBER=${{ github.event.number }}" >> $GITHUB_ENV
+        elif [[ "${{ github.event_name }}" == "issue_comment" && "${{ github.event.issue.pull_request }}" != null ]]; then
+          PR_URL="${{ github.event.issue.pull_request.url }}"
+          PR_NUMBER=$(basename $PR_URL)
+          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
+        fi
+      shell: bash
 
-      - name: Checkout PR's branch
-        if: env.PR_NUMBER
-        run: |
-          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-          PR_DATA=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ env.PR_NUMBER }}")
-          PR_BRANCH=$(echo "$PR_DATA" | jq -r .head.ref)
-          git fetch origin $PR_BRANCH
-          git checkout $PR_BRANCH
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Checkout PR's branch
+      if: env.PR_NUMBER
+      run: |
+        GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+        PR_DATA=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+          "https://api.github.com/repos/${{ github.repository }}/pulls/${{ env.PR_NUMBER }}")
+        PR_BRANCH=$(echo "$PR_DATA" | jq -r .head.ref)
+        git fetch origin $PR_BRANCH
+        git checkout $PR_BRANCH
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Terraform Docs
-        uses: terraform-docs/gh-actions@v1
-        with:
-          working-dir: ./
-          output-file: README.md
-          output-method: inject
+    - name: Setup Terraform Docs
+      uses: terraform-docs/gh-actions@v1
+      with:
+        working-dir: ./
+        output-file: README.md
+        output-method: inject
 
-      - name: terraform fmt
-        uses: dflook/terraform-fmt@v1
-        with:
-          path: ${{ inputs.TF_CONFIG_DIR }}
+    - name: terraform fmt
+      uses: dflook/terraform-fmt@v1
+      with:
+        path: ${{ inputs.TF_CONFIG_DIR }}
 
-      - run: sudo chown -R $(whoami) .git && sudo chmod -R u+rwX .git
+    - run: sudo chown -R $(whoami) .git && sudo chmod -R u+rwX .git
 
-      - name: Commit and Push changes
-        run: |
-          git config user.name github-actions[bot]
-          git config user.email github-actions[bot]@users.noreply.github.com
-          git add .
-          if git diff --staged --quiet; then
-            echo "No changes to commit."
-          else
-            git commit -m "Automated documentation update"
-            # Use git rev-parse to dynamically determine the current branch name
-            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-            git push origin $CURRENT_BRANCH
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Commit and Push changes
+      run: |
+        git config user.name github-actions[bot]
+        git config user.email github-actions[bot]@users.noreply.github.com
+        git add .
+        if git diff --staged --quiet; then
+          echo "No changes to commit."
+        else
+          git commit -m "Automated documentation update"
+          # Use git rev-parse to dynamically determine the current branch name
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          git push origin $CURRENT_BRANCH
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

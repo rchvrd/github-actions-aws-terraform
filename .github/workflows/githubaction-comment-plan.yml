@@ -28,7 +28,7 @@ on:
 jobs:
   terraform:
     name: 'Plan Terraform'
-    runs-on: ubuntu-latest
+    runs-on: arvato
     outputs:
       output1: ${{ steps.job.outputs.job_id }}
     permissions:
@@ -43,7 +43,7 @@ jobs:
     steps:
     - name: Get PR number
       run: echo ${{ inputs.github_event_number }}
-      
+
     # Expose and capture the job ID of the current job
     - uses: ReeganExE/github-action-job-id@v1.0
     - name: Job ID output
@@ -174,7 +174,7 @@ jobs:
   logging:
     name: 'Save logs'
     needs: terraform
-    runs-on: ubuntu-latest
+    runs-on: arvato
     if: always() # This job will always run
     permissions:
       actions: read
