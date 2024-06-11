@@ -9,7 +9,7 @@ on:
 
 jobs:
   generatedocs:
-    runs-on: arvato
+    runs-on: ubuntu-latest
     if: >
       github.event_name == 'pull_request' ||
       github.event_name == 'workflow_dispatch' ||

@@ -18,7 +18,7 @@ on:
 jobs:
   terraform:
     name: 'Plan Terraform'
-    runs-on: arvato
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
