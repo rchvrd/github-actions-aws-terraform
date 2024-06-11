@@ -7,7 +7,7 @@ on:
 jobs:
   terraform:
     name: 'Block Merge'
-    runs-on: ubuntu-latest
+    runs-on: arvato
     permissions:
       id-token: write
       contents: read
