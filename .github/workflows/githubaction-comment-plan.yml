@@ -1,4 +1,4 @@
-name: 'TerraformPlan'
+name: 'TofuPlan'
 
 on:
   issue_comment:
@@ -26,8 +26,8 @@ on:
         default: "."
 
 jobs:
-  terraform:
-    name: 'Plan Terraform'
+  tofu:
+    name: 'Plan Tofu'
     runs-on: arvato
     outputs:
       output1: ${{ steps.job.outputs.job_id }}
@@ -81,17 +81,15 @@ jobs:
     - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
       shell: bash
 
-    # Install the latest version of Terraform CLI
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_version: latest
+    # Install the latest version of tofu CLI
+    - name: Setup Tofu
+      uses: opentofu/setup-opentofu@v1
 
-    # Initialize Terraform
-    - name: Terraform Init ${{ inputs.stack }}
+    # Initialize Tofu
+    - name: Tofu Init ${{ inputs.stack }}
       run: |
         cd ${{ inputs.stack }}
-        terraform init -upgrade
+        tofu init -upgrade
 
     # Terraform Validation Steps
     - name: terraform validate ${{ inputs.stack }}
@@ -117,14 +115,14 @@ jobs:
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
 
-    # Generate terraform plan
-    - name: Terraform Plan ${{ inputs.stack }}
+    # Generate tofu plan
+    - name: Tofu Plan ${{ inputs.stack }}
       id: tfplan
       continue-on-error: true
       run: |
         cd ${{ inputs.stack }}
-        # Bash script to build terraform plan command dynamically
-        COMMAND="terraform plan -input=false -no-color -out=tfplan"
+        # Bash script to build tofu plan command dynamically
+        COMMAND="tofu plan -input=false -no-color -out=tfplan"
         SECRETS_JSON='${{ toJson(secrets) }}'
         SECRETS=$(echo "$SECRETS_JSON" | jq -r 'keys[]')
         # Loop over each secret in the GitHub Actions environment
@@ -132,12 +130,12 @@ jobs:
           value=$(echo "$SECRETS_JSON" | jq -r ".[\"$key\"]")
           # Check if the secret name has the prefix "TF_VAR_"
           if [[ $key == TF_VAR_* ]]; then
-            # Add the secret as an input variable to the terraform command
+            # Add the secret as an input variable to the tofu command
             COMMAND="$COMMAND -var '${key#TF_VAR_}=$value'"
           fi
         done
-        # Execute the dynamically generated terraform command
-        eval $COMMAND && terraform show -no-color tfplan | sed 's/\x27/ /g' | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt
+        # Execute the dynamically generated tofu command
+        eval $COMMAND && tofu show -no-color tfplan | sed 's/\x27/ /g' | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt
 
     # Upload the plan to S3
     - name: Upload ${{ inputs.stack }} Plan to S3
@@ -154,7 +152,7 @@ jobs:
       run: |
         set -x
         cd ${{ inputs.stack }}
-        (printf "**Terraform Plan ${{ inputs.stack }} Environment**\n\n\`\`\`diff" && sed '/^::/d' plan.txt) > comment.txt
+        (printf "**Tofu Plan ${{ inputs.stack }} Environment**\n\n\`\`\`diff" && sed '/^::/d' plan.txt) > comment.txt
         jq -R -s '.' < comment.txt > comment2.txt
         truncate -s -1 comment2.txt
         (echo -n '{ "body": ' && cat comment2.txt && echo -n ' }') > comment3.txt
@@ -173,7 +171,7 @@ jobs:
 
   logging:
     name: 'Save logs'
-    needs: terraform
+    needs: tofu
     runs-on: arvato
     if: always() # This job will always run
     permissions:
@@ -195,9 +193,9 @@ jobs:
     - name: Retrieve log file and upload to s3
       run: |
         TIMESTAMP=$(date +'%Y-%m-%d-%H:%M:%S')
-        LOG_FILENAME="TerraformPlan_${{ inputs.github_event_number }}_PR_$TIMESTAMP.txt"
+        LOG_FILENAME="TofuPlan_${{ inputs.github_event_number }}_PR_$TIMESTAMP.txt"
         # Get log file
-        gh api repos/{owner}/{repo}/actions/jobs/${{ needs.terraform.outputs.output1 }}/logs > $LOG_FILENAME
+        gh api repos/{owner}/{repo}/actions/jobs/${{ needs.tofu.outputs.output1 }}/logs > $LOG_FILENAME
         # Upload it to s3
         aws s3 cp $LOG_FILENAME s3://${{ inputs.s3bucketName }}/logs/Plan/
       env:

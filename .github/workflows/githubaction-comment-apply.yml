@@ -1,4 +1,4 @@
-name: 'TerraformApply'
+name: 'TofuApply'
 
 on:
   issue_comment:
@@ -75,10 +75,10 @@ jobs:
         echo "stack_changed set to: ${{ steps.filter.outputs.stack_changed }}"
       if: always()
 
-  terraform:
+  tofu:
     needs: check-changes
     if: needs.check-changes.outputs.stack_changed == 'true'
-    name: 'Apply Terraform'
+    name: 'Apply Tofu'
     runs-on: arvato
     outputs:
       output1: ${{ steps.job.outputs.job_id }}
@@ -129,17 +129,15 @@ jobs:
     - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
       shell: bash
 
-    # Install the latest version of Terraform CLI
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_version: latest
+    # Install the latest version of tofu CLI
+    - name: Setup Tofu
+      uses: opentofu/setup-opentofu@v1
 
-    # Initialize Terraform
-    - name: Terraform Init
+    # Initialize Tofu
+    - name: Tofu Init
       run: |
         cd ${{ inputs.stack }}
-        terraform init -upgrade
+        tofu init -upgrade
 
     # Terraform Validation Steps
     - name: terraform validate ${{ inputs.stack }}
@@ -171,13 +169,13 @@ jobs:
         cd ${{ inputs.stack }}
         aws s3 cp s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/tfplan ./tfplan
 
-    # Build or change infrastructure according to Terraform configuration files
-    - name: Terraform Apply
+    # Build or change infrastructure according to Tofu configuration files
+    - name: Tofu Apply
       id: apply
       continue-on-error: true
       run: |
         cd ${{ inputs.stack }}
-        terraform apply -input=false -no-color tfplan
+        tofu apply -input=false -no-color tfplan
     # Upload the plan to S3
     - name: Upload Plan to S3
       run: |
@@ -193,7 +191,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cd ${{ inputs.stack }}
-        (printf "**Terraform Apply ${{ inputs.stack }} environment**\n\n\`\`\`" && echo -n '${{ steps.apply.outputs.stdout }}' && printf "\`\`\`\n\n") > comment.txt
+        (printf "**Tofu Apply ${{ inputs.stack }} environment**\n\n\`\`\`" && echo -n '${{ steps.apply.outputs.stdout }}' && printf "\`\`\`\n\n") > comment.txt
         jq -R -s '.' < comment.txt > comment2.txt
         truncate -s -1 comment2.txt
         (echo -n '{ "body": ' && cat comment2.txt && echo -n ' }') > comment3.txt
@@ -224,7 +222,7 @@ jobs:
     #     $URL \
     #     -H "Content-Type: application/json" \
     #     -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-    #     -d '{"commit_title":"terraform update applied"}'
+    #     -d '{"commit_title":"Tofu update applied"}'
 
     # remove the organization plan from S3 whether successful or not
     - name: Delete Plan from S3
@@ -257,7 +255,7 @@ jobs:
 
   logging:
     name: 'Save logs'
-    needs: terraform
+    needs: tofu
     runs-on: arvato
     if: always() # This job will always run
     permissions:
@@ -279,9 +277,9 @@ jobs:
     - name: Retrieve log file and upload to s3
       run: |
         TIMESTAMP=$(date +'%Y-%m-%d-%H:%M:%S')
-        LOG_FILENAME="TerraformApply_${{ inputs.github_event_number }}_PR_$TIMESTAMP.txt"
+        LOG_FILENAME="TofuApply_${{ inputs.github_event_number }}_PR_$TIMESTAMP.txt"
         # Get log file
-        gh api repos/{owner}/{repo}/actions/jobs/${{ needs.terraform.outputs.output1 }}/logs > $LOG_FILENAME
+        gh api repos/{owner}/{repo}/actions/jobs/${{ needs.tofu.outputs.output1 }}/logs > $LOG_FILENAME
         # Upload it to s3
         aws s3 cp $LOG_FILENAME s3://${{ inputs.s3bucketName }}/logs/Apply/
       env:
