@@ -55,7 +55,7 @@ jobs:
     - name: Terraform Init
       run: |
         cd ${{ inputs.stack }}
-        terraform init -upgrade
+        tofu init -upgrade
     - name: terraform validate ${{ inputs.stack }}
       uses: dflook/terraform-validate@v1
       with:
