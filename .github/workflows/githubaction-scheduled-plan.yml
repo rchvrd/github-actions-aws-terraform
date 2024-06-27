@@ -52,10 +52,10 @@ jobs:
     - name: Setup Tofu
       uses: opentofu/setup-opentofu@v1
     # Initialize Terraform
-    - name: Terraform Init
+    - name: Tofu Init
       run: |
         cd ${{ inputs.stack }}
-        terraform init -upgrade
+        tofu init -upgrade
     - name: terraform validate ${{ inputs.stack }}
       uses: dflook/terraform-validate@v1
       with:
