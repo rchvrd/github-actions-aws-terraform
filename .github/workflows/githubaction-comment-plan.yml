@@ -28,7 +28,7 @@ on:
 jobs:
   tofu:
     name: 'Plan Tofu'
-    runs-on: arvato
+    runs-on: ubuntu-latest
     outputs:
       output1: ${{ steps.job.outputs.job_id }}
     permissions:
