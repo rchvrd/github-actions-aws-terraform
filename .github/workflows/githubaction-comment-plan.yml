@@ -171,7 +171,7 @@ jobs:
   logging:
     name: 'Save logs'
     needs: tofu
-    runs-on: arvato
+    runs-on: ubuntu-latest
     if: always() # This job will always run
     permissions:
       actions: read
