@@ -5,15 +5,15 @@ on:
     types: [created]
   workflow_call:
     inputs:
-      region:
-        required: true
-        type: string
-      roleArn:
-        required: true
-        type: string
-      s3bucketName:
-        required: true
-        type: string
+      # region:
+      #   required: true
+      #   type: string
+      # roleArn:
+      #   required: true
+      #   type: string
+      # s3bucketName:
+      #   required: true
+      #   type: string
       github_event_number:
         required: true
         type: string
