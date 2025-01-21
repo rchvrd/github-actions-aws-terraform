@@ -24,6 +24,9 @@ on:
         required: false
         type: string
         default: "."
+    secrets:
+      GITHUB_TOKEN:
+        required: true
 
 jobs:
   tofu:
@@ -39,8 +42,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    env:
-      GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
     steps:
     - name: Get PR number
@@ -72,13 +73,13 @@ jobs:
 
     # Use the fine-grained personal access token directly
     - name: Configure GitHub Token
-      run: echo "GITHUB_TOKEN=${{ env.GITHUB_TOKEN }}" >> $GITHUB_ENV
+      run: echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
 
     # Configure github access
     - uses: de-vri-es/setup-git-credentials@v2
       with:
         # credentials: https://oauth:${{ steps.generate-token.outputs.token }}@github.com/
-        credentials: https://oauth:${{ env.GITHUB_TOKEN }}@github.com/
+        credentials: https://oauth:${{ secrets.GITHUB_TOKEN }}@github.com/
 
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
@@ -108,11 +109,11 @@ jobs:
         # TERRAFORM_HTTP_CREDENTIALS: |
         #   github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
         TERRAFORM_HTTP_CREDENTIALS: |
-          github.com/arvatoaws=oauth:${{ env.GITHUB_TOKEN }}
+          github.com/arvatoaws=oauth:${{ secrets.GITHUB_TOKEN }}
         # GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         # GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
     - name: terraform fmt ${{ inputs.stack }}
@@ -124,11 +125,11 @@ jobs:
         # TERRAFORM_HTTP_CREDENTIALS: |
         #   github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
         TERRAFORM_HTTP_CREDENTIALS: |
-          github.com/arvatoaws=oauth:${{ env.GITHUB_TOKEN }}
+          github.com/arvatoaws=oauth:${{ secrets.GITHUB_TOKEN }}
         # GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         # GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
 
